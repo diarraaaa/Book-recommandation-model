@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
+# SentenceTransformer is imported lazily inside process_and_train_dataset()
+# to avoid slow startup on deployment platforms
 import sqlite3
 import os
 import re
@@ -204,6 +205,7 @@ def process_and_train_dataset(filepath):
 
     try:
         print(f"Starting to encode {len(books)} books using SentenceTransformer. This may take several minutes...")
+        from sentence_transformers import SentenceTransformer
         st_model = SentenceTransformer('all-MiniLM-L6-v2')
         vec_matrix = st_model.encode(books['content'].tolist(), show_progress_bar=True)
         np.save('vec_matrix.npy', vec_matrix)
@@ -364,5 +366,5 @@ def remove_interaction(user_id, book_id):
     conn.commit()
     conn.close()
 
-# Initialize DB tables on module load
-init_db()
+# NOTE: init_db() is called from app.py on first request, not here,
+# so the server port opens immediately on deploy.

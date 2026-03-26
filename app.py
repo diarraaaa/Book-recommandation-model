@@ -14,12 +14,18 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 # ─── Session-based user identification ───
 
+_db_initialized = False
+
 @app.before_request
 def ensure_user_session():
-    """Assign a unique session ID to every visitor on first visit."""
+    """Initialize DB on first request, assign session ID to every visitor."""
+    global _db_initialized
+    if not _db_initialized:
+        model.init_db()
+        _db_initialized = True
     if 'sid' not in session:
         session['sid'] = str(uuid.uuid4())
-        session.permanent = True  # persists after browser close (default 31 days)
+        session.permanent = True
 
 
 def get_current_user_id():
