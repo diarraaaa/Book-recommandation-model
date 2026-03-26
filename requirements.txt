@@ -4,5 +4,6 @@ numpy
 scikit-learn
 sentence-transformers
 waitress
+gunicorn
 psycopg2-binary
 python-dotenv
