@@ -4,8 +4,10 @@ __pycache__/
 *.pyc
 
 # Model artifacts (too large for git)
-vec_matrix.npy
-books_with_content.csv
+# (Actually, taking these off gitignore so we can train locally and push to Render
+# to avoid Out-Of-Memory crashes on the free tier)
+# vec_matrix.npy
+# books_with_content.csv
 
 # Database
 *.db
