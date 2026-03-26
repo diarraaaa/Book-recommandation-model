@@ -78,12 +78,47 @@ Doubling a field pushes the model to cluster books sharing that attribute more t
 
 ### Recommendation Scoring
 
-1. For each book you've rated, the engine computes **cosine similarity** between its vector and every other book
-2. Scores are accumulated: `+similarity` for likes, `−similarity` for dislikes
-3. Already-rated books are excluded (score = −10,000)
-4. The top **500** results are returned, sorted by score
+Every unrated book receives a **cumulative score** based on its similarity to all the books you've rated. The formula for the score of a candidate book `c` is:
 
-**No re-training needed.** The embedding matrix is fixed — only the scoring changes as you interact.
+```
+score(c) = Σ  cosine_similarity(vec[c], vec[rated_i]) × note_i
+           i
+```
+
+Where:
+- `vec[c]` is the 384-dim embedding of the candidate book
+- `vec[rated_i]` is the embedding of each book you've rated
+- `note_i` is `+1.0` for a like and `−1.0` for a dislike
+
+#### Step-by-step
+
+1. **Initialize** a score array of zeros, one entry per book in the catalogue (20,000)
+2. **For each book you've liked** (`note = +1.0`):
+   - Compute cosine similarity between its vector and every other book's vector → produces a similarity array of 20,000 values between −1 and +1
+   - **Add** those similarities to the score array → books similar to what you liked get a positive boost
+3. **For each book you've disliked** (`note = −1.0`):
+   - Same similarity computation, but the values are **subtracted** from the score array → books similar to what you disliked get penalized
+4. **Exclude already-rated books** by setting their score to `−10,000` (guarantees they never appear)
+5. **Sort** descendingly and return the top 500
+
+#### Concrete example
+
+Suppose you liked *Dune* and disliked *Twilight*:
+
+| Candidate Book | sim(Dune) | sim(Twilight) | Score |
+|----------------|-----------|---------------|-------|
+| *Foundation* (sci-fi) | 0.82 | 0.10 | `0.82 × (+1) + 0.10 × (−1)` = **+0.72** |
+| *Ender's Game* (sci-fi) | 0.78 | 0.12 | `0.78 − 0.12` = **+0.66** |
+| *New Moon* (vampire romance) | 0.15 | 0.94 | `0.15 − 0.94` = **−0.79** |
+| *The Martian* (sci-fi) | 0.71 | 0.08 | `0.71 − 0.08` = **+0.63** |
+
+*Foundation* ranks highest because it's very similar to *Dune* and dissimilar to *Twilight*. *New Moon* is buried because it's highly similar to the disliked *Twilight*.
+
+#### Why this works
+
+- **Likes attract**: The more books you like in a genre/by an author, the more their neighborhood accumulates positive signal → stronger genre/author affinity
+- **Dislikes repel**: A single dislike can push down an entire cluster of similar books, preventing the feed from being dominated by genres you don't enjoy
+- **No re-training needed**: The 20,000 × 384 embedding matrix is fixed — only the score computation changes as you interact, making recommendations instant
 
 ### User Identification
 
