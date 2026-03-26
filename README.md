@@ -169,6 +169,28 @@ All user-specific endpoints use **session cookies** for identification — no `u
 
 ---
 
+## 🤗 Deploy to Hugging Face Spaces (Free 16 GB RAM)
+
+This project includes a `Dockerfile` pre-configured for **Hugging Face Spaces**. It’s the perfect host if you want to avoid Out-of-Memory crashes during ML training because their free tier offers 16 GB RAM and 2 vCPUs!
+
+1. Push your code to GitHub (make sure `Dockerfile` is included).
+2. Create an account on [Hugging Face](https://huggingface.co/)
+3. Go to your Profile → **New Space**
+4. Set the **Space name** (e.g., `OmniReads`)
+5. **License**: MIT
+6. **Select the Space SDK**: Choose **Docker** (Blank)
+7. **Space Hardware**: Free (16GB RAM)
+8. Click **Create Space**
+9. Connect inside your new space settings to automatically build from your GitHub repository.
+
+**Important:** Keep your PostgreSQL database on Render. Once the Space is created, go to the Space **Settings** → **Variables and secrets** and add:
+- `SECRET_KEY`: any random string
+- `DATABASE_URL`: The Internal Connection String of your Render database (since HF is outside Render, you must use the **External Connection String**, not the internal one!).
+
+The `Dockerfile` handles port `7860` automatically.
+
+---
+
 ## Security
 
 - **SQL injection protection** — All queries use parameterized placeholders
