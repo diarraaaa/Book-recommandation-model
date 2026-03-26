@@ -1,3 +1,13 @@
+---
+title: OmniReads
+emoji: 📚
+colorFrom: purple
+colorTo: indigo
+sdk: docker
+pinned: false
+app_port: 7860
+---
+
 # OmniReads — AI-Powered Book Recommendation Engine
 
 A full-stack book recommendation platform with a warm, cozy independent bookshop aesthetic. Built with Python, Flask, Sentence Transformers, and a production-ready PostgreSQL backend.

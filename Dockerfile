@@ -1,18 +1,18 @@
 FROM python:3.11-slim
 
-# Set up working directory
+# Create a non-root user (Hugging Face requirement)
+RUN useradd -m -u 1000 user
+USER user
+ENV PATH="/home/user/.local/bin:$PATH"
+
 WORKDIR /app
 
 # Copy requirements and install
-COPY requirements.txt .
+COPY --chown=user ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all files to the container
-COPY . .
-
-# Hugging Face Spaces require running as a non-root user
-RUN useradd -m -u 1000 user
-USER user
+# Copy all files to the container with correct permissions
+COPY --chown=user . /app
 
 # Hugging Face Spaces routes external traffic to port 7860
 ENV PORT=7860
