@@ -1,85 +1,176 @@
-# Book Recommendation System
+# OmniReads — AI-Powered Book Recommendation Engine
 
-A hybrid book recommendation engine built from scratch using NLP and collaborative filtering techniques on a dataset of 50,000+ books.
+A full-stack book recommendation platform with a warm, cozy independent bookshop aesthetic. Built with Python, Flask, Sentence Transformers, and a production-ready PostgreSQL backend.
 
-## What it does
+> **20,000 books · Personalized AI recommendations · Session-based multi-user support · One-click Render deploy**
 
-Given a user's reading history — likes, dislikes, and ratings — the system recommends books they are likely to enjoy. It combines two complementary approaches:
+---
 
-- **Content-based filtering** — finds books similar to what the user has liked, based on descriptions, genres, authors, and series
-- **User-based collaborative filtering** — finds users with similar taste and surfaces books they loved that the user hasn't read yet
+## Features
 
-## Dataset
+- **Personalized Home Feed** — 500 books ranked by your taste profile using content-based cosine similarity
+- **Genre Browsing** — Horizontal scrollable shelves organized by the top 10 genres
+- **Live Search** — Multi-keyword search across title, author, and genre with 400ms debounce
+- **Like / Dislike** — Rate books to shape your recommendations — no page reload needed
+- **Book Detail Modal** — Full metadata overlay with blurred cover background
+- **My Library** — Complete rating history with the ability to remove any rating
+- **Session-based Users** — Each visitor gets a unique identity via browser cookie (no signup required)
+- **Dual Database** — PostgreSQL in production, SQLite fallback for local development
 
-Sourced from Kaggle. ~50,000 books with the following fields used for modeling:
+---
 
-| Field | Role |
-|---|---|
-| `title`, `author` | Identity |
-| `description` | Primary content signal |
-| `genre_and_votes` | Genre extraction |
-| `series` | Series-level similarity |
-| `characters`, `settings` | Universe-level similarity |
-| `average_rating`, `rating_count` | Quality weighting |
+## Tech Stack
 
-## How it works
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Python · Flask · Waitress (WSGI) |
+| **ML / AI** | Sentence Transformers (`all-MiniLM-L6-v2`) · scikit-learn · NumPy |
+| **Database** | PostgreSQL (production) · SQLite (local fallback) |
+| **Data** | Pandas · psycopg2 |
+| **Frontend** | Vanilla HTML/CSS/JS · EB Garamond typography · Font Awesome |
+| **Deploy** | Render (Blueprint via `render.yaml`) |
 
-### Content-Based
+---
 
-Each book is represented as a single embedding vector built from its combined text fields (`title + author + description + genre + series + characters + settings`).
+## Quick Start
 
-Two vectorization approaches were explored:
+### 1. Clone & Install
 
-**TF-IDF + Cosine Similarity**
-Fast and interpretable. Works well for same-author and same-series recommendations. Struggles with semantic similarity across different vocabularies.
-
-**Sentence Transformers (`all-MiniLM-L6-v2`)**
-Encodes full sentences into dense 384-dimensional vectors. Captures semantic meaning — recommending Nietzsche and Sartre when a user likes Camus, not just books with similar words. Significantly better results than TF-IDF for cross-genre discovery.
-
-Recommendations are scored using a weighted formula:
-
-```
-final_score = 0.75 × similarity + 0.15 × (avg_rating / 5) + 0.10 × (rating_count / max_rating_count)
-```
-
-### User-Based Collaborative Filtering
-
-User interactions (like = +1, dislike = −1, rating = normalized between −1 and +1) are stored in a SQLite database and used to build a user × book matrix.
-
-Cosine similarity between user vectors identifies neighbors with similar taste. Books rated positively by similar users — and not yet seen by the target user — are surfaced as recommendations, weighted by neighbor similarity.
-
-### Hybrid
-
-The final recommendation list merges results from both approaches, deduplicates, and returns book IDs with titles.
-
-## Stack
-
-```
-Python · Pandas · NumPy · Scikit-learn · Sentence Transformers · SQLite
+```bash
+git clone https://github.com/diarraaaa/Book-recommandation-model.git
+cd Book-recommandation-model
+pip install -r requirements.txt
 ```
 
-## Results
+### 2. Add Your Dataset
 
-| Query | Top result |
-|---|---|
-| Like: Harry Potter | Harry Potter Boxed Set, The Hogwarts Library, James Potter |
-| Like: White Nights (Dostoevsky) | The Dream of a Ridiculous Man, The Eternal Husband, Demons |
-| Like: Hamlet | Richard II, Henry IV, Coriolanus, Titus Andronicus |
-| Like: A Happy Death (Camus) | The Denial of Death, The Birth of Tragedy, The Reprieve (Sartre) |
+Place `books_cleaned.csv` in the project root.
 
-The model performs well for same-author and same-series retrieval. The Sentence Transformers approach shows meaningful cross-author semantic connections (Camus → Sartre → Nietzsche).
+**Required columns:** `id`, `title`, `author`, `description`, `main_genre`, `second_genre`, `series`, `cover_link`, `publisher`
 
-## Limitations
+### 3. Run
 
-- No genre column in the original dataset — genre was extracted from vote-weighted strings and may be noisy
-- Collaborative filtering uses simulated interaction data — real user behavior would significantly improve results
-- Cold start problem — new users with no interactions fall back to content-based only
-- Some titles contain encoding artifacts from the original CSV
+```bash
+python app.py
+```
 
-## Future Work
+Open **http://localhost:5000**. On first launch, click **"Open the Shelves"** to build the embeddings. This runs once and takes ~20 minutes for 20,000 books on CPU. Results are saved to disk and reused on every subsequent start.
 
-- REST API with Flask for real-time recommendations
-- Web interface with like/dislike/rating interactions stored in SQLite
-- Replace simulated interactions with real user data
-- Evaluate recommendations against the `recommended_books` column present in the dataset
-- Explore Matrix Factorization (SVD) as a third approach
+---
+
+## How It Works
+
+### Embedding Generation
+
+Every book is encoded into a **384-dimensional vector** using `all-MiniLM-L6-v2`. The input text is a weighted concatenation of metadata fields:
+
+| Field | Weight | Rationale |
+|-------|--------|-----------|
+| title | 1× | Core identity |
+| author | 2× | Strong taste signal |
+| description | 1× | Thematic content |
+| main_genre | 2× | Primary categorization |
+| second_genre | 1× | Cross-genre discovery |
+| series | 2× | Series loyalty |
+| publisher | 1× | Mild editorial style signal |
+
+Doubling a field pushes the model to cluster books sharing that attribute more tightly, making same-author and same-series recommendations significantly stronger.
+
+### Recommendation Scoring
+
+1. For each book you've rated, the engine computes **cosine similarity** between its vector and every other book
+2. Scores are accumulated: `+similarity` for likes, `−similarity` for dislikes
+3. Already-rated books are excluded (score = −10,000)
+4. The top **500** results are returned, sorted by score
+
+**No re-training needed.** The embedding matrix is fixed — only the scoring changes as you interact.
+
+### User Identification
+
+- Each visitor is assigned a **UUID** stored in a session cookie
+- The UUID maps to an integer `user_id` in the `users` table
+- All interactions are stored server-side in PostgreSQL (or SQLite locally)
+- Sessions persist for **31 days** across browser restarts
+
+---
+
+## Project Structure
+
+```
+├── app.py                  # Flask API, routing, session management
+├── model.py                # Embedding logic, scoring, DB abstraction
+├── requirements.txt        # Python dependencies
+├── render.yaml             # Render deploy blueprint
+├── .env                    # Local environment config (gitignored)
+├── .gitignore
+├── books_cleaned.csv       # Source dataset (you provide this)
+├── books_with_content.csv  # Processed dataset (auto-generated)
+├── vec_matrix.npy          # Embedding matrix (auto-generated, ~250MB)
+├── interactions.db         # SQLite DB (auto-generated, local only)
+├── templates/
+│   └── index.html          # Main page template
+└── static/
+    ├── style.css           # Bookshop aesthetic stylesheet
+    └── script.js           # Frontend logic and animations
+```
+
+---
+
+## API Reference
+
+All user-specific endpoints use **session cookies** for identification — no `user_id` parameter needed.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/status` | GET | Check if the model is trained and ready |
+| `/api/train` | POST | Trigger initial embedding generation |
+| `/api/home` | GET | Personalized feed (500 books) |
+| `/api/search?q=` | GET | Search by title, author, or genre |
+| `/api/genres` | GET | Top 10 genres with 15 books each |
+| `/api/my_ratings` | GET | Current user's rating history |
+| `/api/recommend?n=10` | GET | Get top N recommendations |
+| `/api/interact` | POST | Save a like (`note: 1.0`) or dislike (`note: -1.0`) |
+| `/api/remove_interact` | POST | Remove a rating |
+
+---
+
+## Security
+
+- **SQL injection protection** — All queries use parameterized placeholders
+- **Session cookies** — `HttpOnly`, `SameSite=Lax`, signed with `SECRET_KEY`
+- **No client-side user_id** — User identification is entirely server-side
+- **`.env` gitignored** — Secrets never reach your repository
+
+---
+
+## Perspectives & Roadmap
+
+### Short-term Improvements
+
+- [ ] **User authentication** — Add email/password login so users keep their library across devices and browsers
+- [ ] **Pagination & lazy loading** — Replace the 500-book dump with infinite scroll for faster initial loads
+- [ ] **Collaborative filtering** — Leverage cross-user interaction data to surface "users who liked X also liked Y" recommendations
+- [ ] **Reading lists / bookmarks** — Let users save books to custom shelves ("To Read", "Favorites", etc.)
+
+### Medium-term Features
+
+- [ ] **Book reviews & notes** — Allow users to write short reviews visible to the community
+- [ ] **Social features** — Follow other readers, see what friends are reading, share recommendations
+- [ ] **Advanced search** — Filter by rating, publication year, page count, series completion status
+- [ ] **Admin dashboard** — Monitor user engagement, popular books, recommendation accuracy metrics
+- [ ] **Dark / light theme toggle** — Let users switch between the bookshop aesthetic and a lighter reading mode
+
+### Long-term Vision
+
+- [ ] **Multi-language support** — Serve recommendations in French, Spanish, Arabic, etc.
+- [ ] **Mobile app** — React Native or Flutter wrapper for iOS/Android
+- [ ] **Real-time recommendations** — WebSocket-powered feed updates as users interact
+- [ ] **External API integrations** — Pull metadata from Google Books, Open Library, or Goodreads
+- [ ] **A/B testing framework** — Compare recommendation algorithms (content-based vs. collaborative vs. hybrid) with real user engagement data
+- [ ] **Fine-tuned embeddings** — Train a custom Sentence Transformer on book-specific data for domain-optimized vectors
+
+---
+
+## License
+
+MIT — Use it, fork it, build your own bookshop.

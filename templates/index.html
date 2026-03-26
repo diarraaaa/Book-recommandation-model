@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniReads — Your Bookshop</title>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fa-solid fa-book-open"></i>
+            <h1><span class="highlight">Omni</span>Reads</h1>
+        </div>
+        <div class="nav-links" id="nav-tabs">
+            <div class="search-bar">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search books...">
+            </div>
+            <button class="nav-btn active" data-target="explore-view"><i class="fa-solid fa-home"></i> Home</button>
+            <button class="nav-btn" data-target="genres-view"><i class="fa-solid fa-masks-theater"></i> Genres</button>
+            <button class="nav-btn" data-target="ratings-view"><i class="fa-solid fa-star"></i> My Library</button>
+        </div>
+    </nav>
+
+    <div class="app-container">
+        <!-- Init Section -->
+        <section id="upload-section" class="glass-panel card init-card">
+            <div class="init-content">
+                <i class="fa-solid fa-book-open init-icon"></i>
+                <h2>Welcome to the Stacks</h2>
+                <p>Your personal catalogue is waiting. We'll map your entire collection using AI so the right book always finds you.</p>
+                <div style="margin-top: 2rem;">
+                    <button id="submit-upload" class="btn primary-btn hidden">Open the Shelves <i class="fa-solid fa-arrow-right"></i></button>
+                    <div id="upload-status" class="status-msg hidden">
+                        <div class="spinner"></div>
+                        <span>Initializing Engine... Please check terminal for progress.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Display -->
+        <main id="app-dash" class="hidden">
+            <!-- Explore View -->
+            <div id="explore-view" class="view-section active">
+                <div class="section-header">
+                    <div>
+                        <h2>In the Stacks Today</h2>
+                        <p>Like a book to train your personal recommendations. The more you rate, the better the curation.</p>
+                    </div>
+                </div>
+                <div class="books-grid" id="explore-list"></div>
+            </div>
+
+            <!-- Genres View -->
+            <div id="genres-view" class="view-section hidden">
+                <div class="section-header">
+                    <div>
+                        <h2>Browse the Shelves</h2>
+                        <p>Sections organized by genre, just like a real bookshop.</p>
+                    </div>
+                </div>
+                <div id="genres-container"></div>
+            </div>
+
+            <!-- Ratings View -->
+            <div id="ratings-view" class="view-section hidden">
+                <div class="section-header">
+                    <div>
+                        <h2>My Library & Ratings</h2>
+                        <p>A history of all the books you've rated or interacted with.</p>
+                    </div>
+                </div>
+                <div class="books-grid" id="ratings-list"></div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-brand">
+                <i class="fa-solid fa-book-open"></i>
+                <span><em>Omni</em>Reads</span>
+            </div>
+            <div class="footer-links">
+                <a href="#">About</a>
+                <a href="#">Privacy</a>
+                <a href="#">Contact</a>
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 OmniReads &mdash; Your AI-powered independent bookshop. All rights reserved.
+            </div>
+        </footer>
+    </div>
+
+    <!-- Book Details Modal -->
+    <div id="book-modal" class="modal hidden">
+        <div class="modal-content glass-panel card">
+            <button id="close-modal" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-body" id="modal-body-content">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
