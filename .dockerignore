@@ -1,0 +1,11 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+.env
+*.db
+Book_recommadation_Model.ipynb
+interactions.sqbpro
+# Raw dataset: only used for training, the app serves books_with_content.csv + vec_matrix.npy
+books_cleaned.csv
+render.yaml

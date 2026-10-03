@@ -1,0 +1,4 @@
+# Extra dependencies only needed to (re)compute vec_matrix.npy locally.
+# Not installed in production: it pulls in PyTorch (several GB).
+-r requirements.txt
+sentence-transformers
